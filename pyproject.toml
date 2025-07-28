@@ -1,0 +1,12 @@
+[project]
+name = "annotate-video-with-multimodal-model"
+version = "0.1.0"
+description = "Automated video analysis by extracting keyframes at regular intervals and using a local multimodal AI model to generate detailed annotations."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=1.97.1",
+    "opencv-python>=4.12.0.88",
+    "pandas>=2.3.1",
+    "tqdm>=4.67.1",
+]
