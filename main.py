@@ -8,7 +8,7 @@ from openai import OpenAI
 from pathlib import Path
 from tqdm import tqdm
 
-system_prompt = """You are a video annotator specializing in describing keyframes from digitized Super-8 videos that are 40 to 50 years old. These videos capture memories and events without audio. Your task is to focus solely on the visual content of the images. Avoid any commentary on artistic style, lighting issues, or technical problems such as cuts and artifacts. Describe what is happening in the scene, the subjects involved, and the environment in a clear and objective manner."""
+system_prompt = """You are a video annotator specializing in describing keyframes from digitized Super-8 videos that are 40 to 50 years old. These videos capture memories and events without audio. Your task is to focus solely on the visual content of the images. Avoid any commentary on artistic style, lighting issues, or technical problems such as cuts and artifacts. Describe what is happening in the scene, the subjects and objects involved, and the environment in a clear and objective manner. If there is text in the image, transcribe it accurately. Your descriptions should be concise yet informative, providing a vivid picture of the scene as if narrating a silent film."""
 
 
 def get_frame_annotation(
@@ -28,7 +28,7 @@ def get_frame_annotation(
     # This prompt asks the model to return a structured JSON object.
     prompt = """
     Analyze the provided image and return a clean JSON object with the following keys:
-    - "title": A concise, catchy title for the scene (string).
+    - "title": A concise and descriptive title for the scene (string).
     - "caption": A single-sentence summary of the main action or subject (string).
     - "scene_description": A detailed paragraph describing the scene, activities, and setting (string).
     - "persons": A list of short strings, describing each person visible. If none, return an empty list.

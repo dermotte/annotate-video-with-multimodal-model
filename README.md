@@ -33,3 +33,10 @@ You can feed the video description to an LLM with the following prompt:
 Please make a description of a video for me. The video has been taken by an amateuer videographer in the 1970s and is a super-8 home video without audio. Focus on the content of the video and describe what is going on from the beginning to end. I have an automated video annotation in a five seconds interval: 
 ...
 ```
+
+Alternative, longer prompt:
+
+```
+The following CSV data describes the visual content of an edited super-8 video roughly 40-50 years old. The first column gives the time stamp in seconds, the remaining columns give title, caption, description, persons, and objects in the respective frame based on automated analysis. Please summarize the CSV data and give me a description of the video (2 paragraphs). Then find scenes in the video based on the frame descriptions by grouping subsequent frames with similar descriptions. For each scene you detect, estimate the beginning and the duration. Then describe what is happening, including eventuall described objects, persons and interaction. Do not use emojis. Note that at the beginning if each video, there are a few frames without content, mostly sand colored and scratchy, that the automated analysis might have mistaken for actual content. Please ignore them, and skip that scene in the description.
+...
+```
