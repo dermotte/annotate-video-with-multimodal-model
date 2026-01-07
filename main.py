@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 system_prompt = """You are a video annotator specializing in describing keyframes from digitized Super-8 videos that are 40 to 50 years old. These videos capture memories and events without audio. Your task is to focus solely on the visual content of the images. Avoid any commentary on artistic style, lighting issues, or technical problems such as cuts and artifacts. Describe what is happening in the scene, the subjects and objects involved, and the environment in a clear and objective manner. If there is text in the image, transcribe it accurately. Your descriptions should be concise yet informative, providing a vivid picture of the scene as if narrating a silent film."""
 
+# system_prompt = "As an artificial intelligence created to analyze video frames from the game \"7 Days To Die,\" your main goal is to interpret and transcribe text found within these game shots. The first-person shooter video game is set in a post-apocalyptic world infested with zombies, where survival, resource gathering, and base fortification are paramount. Your task is to exclusively focus on the visual content of each frame, avoiding any commentary on the game's artistic style, lighting or any technical issues such as glitches. Describe the on-screen action, the characters involved, objects being used, the environment and any situation arising in clear, objective terms. If there is in-game text visible on screen, transcribe it accurately and interpret it within the context of the game. Your digital synthesis should be concise yet informative, providing a detailed interpretation of each game frame as if narrating a suspense-filled, silent survival story."
 
 def get_frame_annotation(
     client: OpenAI, base64_image: str, model_name: str
@@ -34,8 +35,11 @@ def get_frame_annotation(
     - "persons": A list of short strings, describing each person visible. If none, return an empty list.
     - "objects": A list of short strings, identifying key objects in the scene. If none, return an empty list.
 
-    Your response must be ONLY the JSON object, without any additional text or markdown formatting.
+    Your response must be ONLY the JSON object, without any additional text or markdown formatting. The text in the JSON needs to be German.
     """
+
+    # TODO: Integrate all available metadata we have from the video. 
+
 
     try:
         response = client.chat.completions.create(
@@ -71,7 +75,6 @@ def get_frame_annotation(
         if not all(key in data for key in required_keys):
             print(f"⚠️ Warning: Model response missing required keys. Response: {data}")
             return None
-
         return data
 
     except json.JSONDecodeError:
@@ -124,6 +127,7 @@ def process_video(
     timestamps = [
         i * interval_seconds for i in range(int(duration_seconds / interval_seconds))
     ]
+    timestamps = timestamps[1:-1] # Omit the very first frame.
 
     with tqdm(total=len(timestamps), desc="Analyzing Keyframes") as pbar:
         for timestamp_sec in timestamps:
@@ -140,7 +144,6 @@ def process_video(
 
             pbar.set_description(f"Analyzing frame at {timestamp_sec:.1f}s")
             annotation = get_frame_annotation(client, base64_image, model_name)
-
             if annotation:
                 annotation["timestamp"] = round(timestamp_sec, 2)
                 # Convert lists to comma-separated strings for clean CSV storage
