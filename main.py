@@ -88,7 +88,7 @@ def get_frame_annotation(
 
 
 def process_video(
-    video_path: str, interval_seconds: int, api_url: str, model_name: str
+    video_path: str, interval_seconds: int, api_url: str, model_name: str, time_stamps: list[int] | None = None
 ):
     """
     Extracts keyframes from a video, gets annotations from an AI model,
@@ -121,15 +121,21 @@ def process_video(
     print(
         f"🎬 Video Info:\n  - Path: {video_path}\n  - FPS: {fps:.2f}\n  - Duration: {duration_seconds:.2f}s"
     )
-    print(f"🔍 Analyzing one frame every {interval_seconds} seconds.")
-
+    
     all_annotations = []
-
-    # Calculate the timestamps for keyframes
-    timestamps = [
-        i * interval_seconds for i in range(int(duration_seconds / interval_seconds))
-    ]
-    timestamps = timestamps[1:-1] # Omit the very first frame.
+    
+    # Determine timestamps to use
+    if time_stamps is not None:
+        # Convert frame numbers to timestamps (in seconds)
+        timestamps = [frame_num / fps for frame_num in time_stamps]
+        print(f"🔍 Analyzing specific frames: {time_stamps}")
+    else:
+        # Use interval-based approach
+        print(f"🔍 Analyzing one frame every {interval_seconds} seconds.")
+        timestamps = [
+            i * interval_seconds for i in range(int(duration_seconds / interval_seconds))
+        ]
+        timestamps = timestamps[1:-1] # Omit the very first frame.
 
     with tqdm(total=len(timestamps), desc="Analyzing Keyframes") as pbar:
         for timestamp_sec in timestamps:
@@ -220,12 +226,28 @@ if __name__ == "__main__":
         default="http://localhost:1234/v1",
         help="URL of the LMStudio server API. Default is http://localhost:1234/v1.",
     )
+    parser.add_argument(
+        "-ts",
+        "--time-stamps",
+        type=str,
+        help="Comma-separated list of frame numbers to analyze (e.g., 1,12,15,22). If provided, this will override the interval option.",
+    )
 
     args = parser.parse_args()
+    
+    # Parse time stamps if provided
+    time_stamps = None
+    if args.time_stamps:
+        try:
+            time_stamps = [int(x) for x in args.time_stamps.split(',')] 
+        except ValueError:
+            print("❌ Error: Time stamps must be comma-separated integers.")
+            exit(1)
 
     process_video(
         video_path=args.video,
         interval_seconds=args.interval,
         api_url=args.api_url,
         model_name=args.model,
+        time_stamps=time_stamps,
     )
