@@ -3,6 +3,7 @@ import base64
 import os
 import argparse
 import json
+import re
 import pandas as pd
 from openai import OpenAI
 from pathlib import Path
@@ -34,6 +35,7 @@ def get_frame_annotation(
     - "scene_description": A detailed paragraph describing the scene, activities, and setting (string).
     - "persons": A list of short strings, describing each person visible. If none, return an empty list.
     - "objects": A list of short strings, identifying key objects in the scene. If none, return an empty list.
+    - "text": A string containing the recognized text in the frame. If none, return an empty string.
 
     Your response must be ONLY the JSON object, without any additional text or markdown formatting. The text in the JSON needs to be German.
     """
@@ -144,11 +146,16 @@ def process_video(
 
             pbar.set_description(f"Analyzing frame at {timestamp_sec:.1f}s")
             annotation = get_frame_annotation(client, base64_image, model_name)
+            if not annotation:
+                pbar.set_description(f"Retrying to analyze frame at {timestamp_sec:.1f}s")
+                annotation = get_frame_annotation(client, base64_image, model_name)
             if annotation:
                 annotation["timestamp"] = round(timestamp_sec, 2)
                 # Convert lists to comma-separated strings for clean CSV storage
                 annotation["persons"] = ", ".join(annotation.get("persons", []))
                 annotation["objects"] = ", ".join(annotation.get("objects", []))
+                # Escaping new line character with optional \r
+                annotation["text"] = re.sub(r'\r?\n', r'\\n', annotation["text"])
                 all_annotations.append(annotation)
                 pbar.write(
                     f"  ✅ Annotated frame at {timestamp_sec:.1f}s. Title: {annotation['title']}: {annotation['caption']}"
@@ -175,6 +182,7 @@ def process_video(
         "scene_description",
         "persons",
         "objects",
+        "text",
     ]
     df = df[column_order]
 
